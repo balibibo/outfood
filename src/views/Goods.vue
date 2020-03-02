@@ -4,7 +4,7 @@
             <!-- 滚动优化容器 -->
             <ul class="content">
                 <ul>
-                    <li v-for="(item, index) in shoplist" :key="item.id" @click="goodsl(index)" :class="{gsnm: true, gsl: curgoodsl==index}">
+                    <li v-for="(item, index) in this.$store.state.shopListData" :key="item.id" @click="goodsl(index)" :class="{gsnm: true, gsl: curgoodsl==index}">
                         {{ item.name }}
                     </li>
                 </ul>
@@ -13,17 +13,17 @@
         <div class="goods-right">
             <!-- 滚动优化容器 -->            
             <ul class="content">
-                <ul :id="i" v-for="(v, i) in shoplist" :key="i">
+                <ul :id="i" v-for="(v, i) in this.$store.state.shopListData" :key="i">
                     <li>{{v.name}}</li>
                     <li v-for="(v01, i01) in v.foods" :key="i01">
                         <div class="list-line">
-                            <div class="list-img"><img src="../assets/img/index_Bg.jpg" width="80px" height="80px" alt=""></div>
+                            <div class="list-img"><img :src="v01.icon" width="80px" height="80px" alt=""></div>
                             <div class="list-main">
                                 <p>{{v01.name}}</p>
-                                <p>咸粥</p>
-                                <p>月售1132份 好评率100%</p>
-                                <p><span>￥24</span><span class="pc2">￥28</span>
-                                <span class="btnup"><button id="btnl">-</button><span>1</span><button id="btnr">+</button></span>
+                                <p class="oversl">{{v01.description}}</p>
+                                <p>月售{{v01.sellCount}}份 好评率100%</p>
+                                <p><span>￥{{v01.price}}</span><span class="pc2">{{v01.oldPrice==""?"":`￥${v01.oldPrice}`}}</span>
+                                <span class="btnup"><button id="btnl" @click="btn(-1, i, i01)" v-show="v01.num>0">-</button><span v-show="v01.num>0">{{v01.num}}</span><button id="btnr" @click="btn(1, i, i01)">+</button></span>
                                 </p>
                             </div>
                         </div>
@@ -42,29 +42,102 @@ import BScroll from 'better-scroll'
     export default {
         data() {
             return {
-                shoplist: {},
-                curgoodsl: 0
+                curgoodsl: 0,
             }
         },
         created() {
             getGoods().then((res) => {
-                console.log(res.data.data)
-                this.shoplist = res.data.data
+                //  将接口数据放 到当前数据
+                // console.log(res.data.data)
+                // this.shoplist = res.data.data
+                
+                // Vuex
+                this.$store.commit('shopListDataInfo', res.data.data)
+                console.log(this.$store.state.shopListData)
             })
         },
         mounted() {
             // new BScroll(DOM节点, 滚动设置)
             new BScroll(document.querySelector('.goods-left'),{click: true});
+
+
             // 右侧 将对象挂载到this上！！！！！！！！！！！！！！！
-            this.rightList = new BScroll(document.querySelector('.goods-right'),{click: true});
+            this.rightList = new BScroll(document.querySelector('.goods-right'),{
+                click: true,
+                probeType: 3  //  实时触发滚动事件
+                });
+
+            // 右链左
+            // 监听scroll （滚动条事件） 参数为 （object，{x，y}）
+            this.rightList.on('scroll', ( {y} ) => {    // {y} ===  obj.y  即对象中的y方法
+                // abs取正整数
+                let _y = Math.abs(y)
+                // console.log(this.getNav,_y)
+
+                //  不适用计算属性会大量耗费计算资源
+                /* console.log(_y)
+                if(_y >=0 && _y < 1286){
+                    this.curgoodsl = 0;
+                } else if(_y >=1286 && _y < 1438){
+                    this.curgoodsl = 1;
+                } */
+
+                // 适用计算属性优化后
+                // 将计算属性返回的值保存
+                let Hdata = this.getNav;
+
+                for(let j=0;j<Hdata.length;j++){
+                    if(_y >= Hdata[j].min && _y < Hdata[j].max) {
+                            this.curgoodsl = Hdata[j].index
+                    }
+                }
+            })
+
         },
         methods: {
+            // 获取对应索引       做   左链右
             goodsl(index) {
                 this.curgoodsl = index;
 
                 // 滚动  querySelector不支持数字字符串ID
                 // this.rightList.scrollToElement(document.querySelector(index))
                 this.rightList.scrollToElement(document.getElementById(index),1000)
+            },
+
+            //  商品数量计算
+            btn(num, listI, foodsI){
+                // console.log(this.$store.state.shopListData[listI].foods[foodsI].num)
+                this.$store.state.shopListData[listI].foods[foodsI].num+=num
+                //收集当前商品信息
+                console.log(this.$store.state.shopListData[listI].foods[foodsI])
+                // this.$store.commit('shopCarPush', this.$store.state.shopListData[listI].foods[foodsI])
+                // 当前选中商品
+                // console.log(this.$store.state.shopCarInfo)
+
+                if(this.$store.state.shopListData[listI].foods[foodsI].num<=0){
+                    this.$store.state.shopListData[listI].foods[foodsI].num = 0
+                }
+            }
+        },
+        // 计算属性会进行运算结果缓存    无论去多少次，只要数据无变化，都是取第一次运算完的缓存结果
+        // 计算属性 因为是属性，所以无法传值  计算属性必须有return  不能作为事件句柄去绑定
+        // 计算属性不需要再data里声明，用的时候直接 this.xxx
+        computed: {
+            // 右链左  最大高度和最小高度获取
+            getNav() {
+                let arr = []
+                let ah = 0
+                for(let i=0; i < this.$store.state.shopListData.length; i++){
+                    // 取每个模块对应高度  通过id
+                    let ulH = document.getElementById(i).offsetHeight
+                    // 拿到当前模块的最小和最大高度位置，以及对应的id模块
+                    arr.push({min: ah, max: ah+ulH, index: i})
+
+                    // 将高度累加 作为下一次的最小高度
+                    ah += ulH;
+                }
+
+                return arr;
             }
         }
     }
@@ -74,6 +147,10 @@ import BScroll from 'better-scroll'
 li{
     list-style: none;
 }
+
+// 取消 button 点击时的边框效果
+button:focus {outline:none;}
+
 #goods{
     flex: 1;
     // height: 450px;
@@ -126,7 +203,14 @@ li{
                 position: relative;
 
                 .list-main{
-                margin-left: 10px;
+                    flex: 1;
+                    margin-left: 10px;
+                    .oversl{
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        width: 90%;
+                    }
                 }
                 .list-main>p:first-child{
                     font-size: 18px;
@@ -168,6 +252,8 @@ li{
                         }
                         span{
                             margin: 0px 6px;
+                            width: 16px;
+                            text-align: center;
                         }
                         #btnl{
                             height: 22px;

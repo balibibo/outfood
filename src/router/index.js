@@ -9,8 +9,9 @@ const routes = [
     path: '/',
     name: 'Main',
     component: Main,
+    redirect: '/Goods', // 默认路由设置
     children: [
-      {path: '/', name: 'Goods', component: () => import('../views/Goods.vue')},
+      {path: '/Goods', name: 'Goods', component: () => import('../views/Goods.vue')},
       {path: '/Evaluate', name: 'Evaluate', component: () => import('../views/Evaluate.vue')},
       {path: '/Merchant', name: 'Merchant', component: () => import('../views/Merchant.vue')},
     ]
@@ -19,7 +20,8 @@ const routes = [
 ]
 
 const router = new VueRouter({
-  routes
+  routes,
+  linkActiveClass: 'navActive'   // active为路由激活时动态添加的类，类名可以自定义
 })
 
 export default router

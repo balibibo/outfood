@@ -1,39 +1,46 @@
 <template>
     <div id="Main">
-        <div id="main-bg" :style="{backgroundImage: 'url('+indexData.avatar+')'}"></div>
+        <div id="main-bg" :style="{backgroundImage: 'url('+this.$store.state.shopData.avatar+')'}"></div>
             
         <div id="main-bgcolor">
             <div class="main">
                 <div class="main-img">
-                    <img :src="indexData.avatar" width="80px" height="80px" alt="">
+                    <img :src="this.$store.state.shopData.avatar" width="80px" height="80px" alt="">
                 </div>
                 <div class="main-describe">
-                    <p class="p1"><img src="../assets/img/brand@2x.png" height="24px" alt=""><span>{{indexData.name}}</span></p>
-                    <p class="p2">{{indexData.description}}/{{indexData.deliveryTime}}分钟送达</p>
+                    <p class="p1"><img src="../assets/img/brand@2x.png" height="24px" alt=""><span>{{this.$store.state.shopData.name}}</span></p>
+                    <p class="p2">{{this.$store.state.shopData.description}}/{{this.$store.state.shopData.deliveryTime}}分钟送达</p>
                     <p class="p3"><img src="../assets/img/decrease_3@2x.png" height="18px" alt=""><span>在线支付满</span></p>
                 </div>
             </div>
             <!-- 公告 -->
-            <div class="notice"><img src="../assets/img/bulletin@2x.png" height="18px" alt=""><p>{{indexData.bulletin}}</p></div>
+            <div class="notice"><img src="../assets/img/bulletin@2x.png" height="18px" alt=""><p>{{this.$store.state.shopData.bulletin}}</p></div>
         </div>
 
         <!-- 导航 -->
         <div id="indexNav">
-            <router-link to="/">商品</router-link>
+            <router-link to="/Goods">商品</router-link>
             <router-link to="/Evaluate">评价</router-link>
             <router-link to="/Merchant">商家</router-link>
         </div>
         <router-view />
-        <div id="shop">
+
+        <!-- 购物车组件 -->
+        <transition name="slide-fade">
+            <div id="shopCar" v-show="shopCarShow"><shopCar></shopCar></div>
+        </transition>
+
+        <!-- 底部信息 -->
+        <div id="shop" @click="shopCarShow = !shopCarShow">
             <div class="shop-main">
                 <!-- 购物图标 -->
                 <div class="icon-bg"><span class="icon"><Icon type="ios-cart"></Icon></span></div>
                 
                 <div class="shop-info">
-                    <span>￥ 0</span>
-                    <span>另需配送费￥{{indexData.deliveryPrice}}元</span>
+                    <span>￥ {{this.$store.getters.getSum}}</span>
+                    <span>另需配送费￥{{this.$store.state.shopData.deliveryPrice}}元</span>
                 </div>
-                <button class="shop-btn">￥{{indexData.minPrice}}起送</button>
+                <button class="shop-btn">￥{{this.$store.state.shopData.minPrice}}起送</button>
             </div>
         </div>
     </div>
@@ -41,25 +48,40 @@
 
 <script>
 import { getSeller } from '../api/api.js'
+import shopCar from '../views/shopCar'
 
     export default {
-
         data() {
             return {
-                indexData: {},
+                shopCarShow: false   // 购物车显示隐藏
             }
         },
         // 在创建时请求到接口返回的参数
         created(){
             getSeller().then((res) => {
+                // vue中使用
                 // console.log(res.data.data)
-                this.indexData = res.data.data
+                // this.indexData = res.data.data
+                
+                // Vuex 使用
+                // 从 Vuex 中调属性修改
+                this.$store.commit('shopDataInfo', res.data.data)
+
             })
-        }
+        },
+        components: {
+            shopCar
+        },
     }
 </script>
 
 <style lang="less" scoped>
+#indexNav{
+    .navActive{
+        color: red;
+        // font-weight: bold;
+    }
+}
 *{
     padding: 0;
     margin: 0;
@@ -191,9 +213,11 @@ import { getSeller } from '../api/api.js'
             span:nth-child(1){
                 display: inline-block;
                 border-right: 1px solid #939498;
-                padding-right: 20px;
+                // padding-right: 20px;
                 font-size: 20px;
                 font-weight: bold;
+                
+                width: 66px;
             }
             span:nth-child(2){
                 margin-left: 20px;
@@ -215,5 +239,33 @@ import { getSeller } from '../api/api.js'
         
     }
 }
+
+
+// 购物车板子
+
+#shopCar{
+    position: fixed;
+    left: 0;
+    bottom: 50px;
+    background: #FAFAFA;
+    width: 100%;
+    height: 220px;
+    
+}
+
+/* 可以设置不同的进入和离开动画 */
+/* 设置持续时间和动画函数 */
+.slide-fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active {
+  transition: all .4s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active for below version 2.1.8 */ {
+  transform: translateY(220px);
+  opacity: 0;
+}
+
 
 </style>
