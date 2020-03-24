@@ -2,17 +2,15 @@
     <div>
         <p class="shopCarTitle">购物车</p>
         <div class="shopH">
-            <div v-for="(v, i) in this.$store.state.shopListData" :key="i">
-                <div v-show="v01.num>0" class="shopCarInfo" v-for="(v01, i01) in v.foods" :key="i01">
-                    <p class="shopNameInfo">
-                        <img :src="v01.icon" width="50px" alt="">
-                        <span>{{v01.name}}</span>
-                        </p>
-                    <div class="shopCar-cz">
-                        <button class="car-btnl" @click="btn(-1, i, i01)" >-</button>
-                        <span>{{v01.num}}</span>
-                        <button class="car-btnr" @click="btn(1, i, i01)">+</button>
-                    </div>
+            <div class="shopCarInfo" v-for="(v, i) in this.$store.getters.getshopCar" :key="i">
+                <p class="shopNameInfo">
+                    <img :src="v.icon" width="50px" alt="">
+                    <span>{{v.name}}</span>
+                    </p>
+                <div class="shopCar-cz">
+                    <button class="car-btnl" @click="btn(-1, v.name)" >-</button>
+                    <span>{{v.num}}</span>
+                    <button class="car-btnr" @click="btn(1, v.name)">+</button>
                 </div>
             </div>
         </div>
@@ -25,18 +23,10 @@
         methods: {
             //  商品数量计算
             // 这里遍历 foods  每一种foods 在一个div中 判断当前foods 数量为0时隐藏
-            btn(num, listI, foodsI){
-                // console.log(this.$store.state.shopListData[listI].foods[foodsI].num)
-                this.$store.state.shopListData[listI].foods[foodsI].num+=num
-                //收集当前商品信息
-                console.log(this.$store.state.shopListData[listI].foods[foodsI])
-                // this.$store.commit('shopCarPush', this.$store.state.shopListData[listI].foods[foodsI])
-                // 当前选中商品
-                // console.log(this.$store.state.shopCarInfo)
+            btn(val, name){
+                
+                this.$store.commit('shopNum', {name, val})
 
-                if(this.$store.state.shopListData[listI].foods[foodsI].num<=0){
-                    this.$store.state.shopListData[listI].foods[foodsI].num = 0
-                }
             }
         }
     }

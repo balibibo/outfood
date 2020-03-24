@@ -37,7 +37,7 @@
                 <div class="icon-bg"><span class="icon"><Icon type="ios-cart"></Icon></span></div>
                 
                 <div class="shop-info">
-                    <span>￥ {{this.$store.getters.getSum}}</span>
+                    <span>￥ {{getSum}}</span>
                     <span>另需配送费￥{{this.$store.state.shopData.deliveryPrice}}元</span>
                 </div>
                 <button class="shop-btn">￥{{this.$store.state.shopData.minPrice}}起送</button>
@@ -72,6 +72,15 @@ import shopCar from '../views/shopCar'
         components: {
             shopCar
         },
+        computed: {
+            getSum() {
+                var sum = 0;
+                this.$store.getters.getshopCar.map( v => {
+                        sum += v.num*v.price
+                })
+                return sum;
+            },
+        }
     }
 </script>
 

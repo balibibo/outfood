@@ -23,7 +23,11 @@
                                 <p class="oversl">{{v01.description}}</p>
                                 <p>月售{{v01.sellCount}}份 好评率100%</p>
                                 <p><span>￥{{v01.price}}</span><span class="pc2">{{v01.oldPrice==""?"":`￥${v01.oldPrice}`}}</span>
-                                <span class="btnup"><button id="btnl" @click="btn(-1, i, i01)" v-show="v01.num>0">-</button><span v-show="v01.num>0">{{v01.num}}</span><button id="btnr" @click="btn(1, i, i01)">+</button></span>
+                                <span class="btnup">
+                                    <button id="btnl" @click="btn(-1, v01.name)" v-show="v01.num>0">-</button>
+                                    <span v-show="v01.num>0">{{v01.num}}</span>
+                                    <button id="btnr" @click="btn(1, v01.name)">+</button>
+                                </span>
                                 </p>
                             </div>
                         </div>
@@ -105,18 +109,10 @@ import BScroll from 'better-scroll'
             },
 
             //  商品数量计算
-            btn(num, listI, foodsI){
-                // console.log(this.$store.state.shopListData[listI].foods[foodsI].num)
-                this.$store.state.shopListData[listI].foods[foodsI].num+=num
-                //收集当前商品信息
-                console.log(this.$store.state.shopListData[listI].foods[foodsI])
-                // this.$store.commit('shopCarPush', this.$store.state.shopListData[listI].foods[foodsI])
-                // 当前选中商品
-                // console.log(this.$store.state.shopCarInfo)
+            btn(val, name){
+                // 调用vuex 计算商品数量方法
+                this.$store.commit('shopNum', {name, val})
 
-                if(this.$store.state.shopListData[listI].foods[foodsI].num<=0){
-                    this.$store.state.shopListData[listI].foods[foodsI].num = 0
-                }
             }
         },
         // 计算属性会进行运算结果缓存    无论去多少次，只要数据无变化，都是取第一次运算完的缓存结果

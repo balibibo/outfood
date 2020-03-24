@@ -29,25 +29,45 @@ var store =  new Vuex.Store({
     shopListDataInfo(state, info) {
       state.shopListData = info
     },
-    /* shopCarPush(state, dataObj){
-      state.shopCarInfo.push(dataObj)
-      // 去重
-    } */
+
+    // 修改对应商品数量
+    shopNum(state, dataObj){
+      for(let typeObj of state.shopListData) {
+        for(let food of typeObj.foods) {
+          // 找到同名商品，改变数量
+          if(food.name == dataObj.name){
+            food.num += dataObj.val
+          }
+        }
+      }
+      
+    }
 
   },
   // Vuex的计算属性   vue中的引用方法  this.$store.getters.xxx
   getters: {
-    getSum(state) {
-      var sum = 0;
-      var dj = 0;
-      state.shopListData.map( items => {
-          items.foods.forEach(v => {
-              dj = v.num*v.price
-              sum += dj
-          });
-      })
-      return sum;
-    },
+    
+    // 获取购物车数据， 只对商品做添加操作 已存在不会添加
+    getshopCar(state) {
+      let shopArr = [];
+      let shopNames = [];
+      for(let typeObj of state.shopListData) {
+        for(let food of typeObj.foods) {
+
+          // 购物车显示 数量大于0的商品
+          if(food.num > 0) {
+            // 如果 添加商品 或 增加数量，先判断购物车中是否存在 该商品
+            // 将已有的商品过滤掉
+            if(!shopNames.includes(food.name)){
+              // 将购物车中不存在的商品添加进购物车，并记录
+              shopArr.push(food)
+              shopNames.push(food.name)
+            }
+          }
+        }
+      }
+      return shopArr
+    }
   },
   actions: {
   },
